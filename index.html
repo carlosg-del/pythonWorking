@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cambridge 0478 Python Trace It</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#18212b}
+header{background:#17212b;color:#fff;padding:16px 22px}header h1{margin:0;font-size:24px}header p{margin:5px 0 0;color:#cbd5df}
+.task{background:#fff;padding:14px 22px;border-bottom:1px solid #d8dee5;display:flex;align-items:center;gap:18px}
+.tasktext{flex:1;font-size:27px}.tasktext strong{color:#2563eb;display:block;margin-bottom:5px;font-size:15px}.tasktext small{display:block;color:#66717d;margin-top:8px;font-size:13px}
+.target-area{width:350px;flex-shrink:0}.targetbox{width:350px;height:185px;border:1px solid #aeb8c2;border-radius:5px;background:#fff;overflow:hidden;box-shadow:0 1px 3px #0001}
+.target-output{width:100%;height:100%;margin:0;padding:15px;background:#fff;font:14px/1.45 Consolas,monospace;white-space:pre-wrap;overflow:auto}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px;min-height:455px}
+.panel{background:#fff;border:1px solid #d8dee5;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.panel h2{font-size:15px;margin:0;padding:11px 14px;border-bottom:1px solid #d8dee5}
+textarea{flex:1;min-height:315px;width:100%;resize:none;border:0;padding:16px;font:15px/1.5 Consolas,monospace;outline:0;background:#101820;color:#eee;tab-size:4}
+.output{flex:1;min-height:315px;width:100%;padding:16px;background:#101820;color:#dbe7f0;font:15px/1.5 Consolas,monospace;white-space:pre-wrap;overflow:auto}
+.inputbar{padding:9px;border-top:1px solid #d8dee5;background:#f8fafc}.inputbar label{font-size:13px;font-weight:600;display:block;margin-bottom:5px}
+#programInput{width:100%;padding:8px;border:1px solid #c8d0d8;border-radius:5px;font:14px Consolas,monospace}
+.toolbar{display:flex;gap:8px;padding:9px;border-top:1px solid #d8dee5}
+button{border:0;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer}.run{background:#2563eb;color:#fff}.reset{background:#e5e7eb}.check{background:#16a34a;color:#fff;margin-left:auto}
+.reveal,.target-reveal{background:#6b7280;color:#fff}.reveal-wrap{border-top:1px solid #d8dee5;background:#f8fafc;padding:9px}.reveal{width:100%}.target-reveal{width:350px;margin-top:7px}
+.revealed-code,.target-code{display:none;margin:8px 0 0;padding:10px;max-height:180px;overflow:auto;background:#101820;color:#dbe7f0;border-radius:5px;font:12px/1.45 Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+.feedback{padding:10px 14px;border-top:1px solid #d8dee5;min-height:42px}.good{color:#15803d}.bad{color:#b91c1c}.muted{color:#66717d}.status{font-size:12px;color:#66717d;margin-left:auto}
+@media(max-width:900px){.task{align-items:flex-start}.tasktext{font-size:20px}.target-area,.targetbox{width:260px}.target-reveal{width:260px}.layout{grid-template-columns:1fr;padding:14px}}
+</style>
+<style>.score-box{position:sticky;top:0;z-index:1000;margin:0 auto 10px;padding:8px 18px;width:max-content;border-radius:10px;background:#222;color:#fff;font-size:22px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.18)}.score-box strong{font-size:26px}</style></head>
+<body>
+<div class="score-box"><span>Score</span><strong id="score">0</strong><span>/ 60</span></div>
+<header><h1>Cambridge IGCSE 0478 — Python Trace It</h1><p>Write Python → run it → compare the output → check your solution.</p></header>
+
+<div class="task">
+  <div class="tasktext">
+    <strong id="num">Task 1 of 20</strong>
+    <div id="task"></div>
+    <small>The target shows the required output. No starter code is provided.</small>
+  </div>
+  <div class="target-area">
+    <div class="targetbox"><pre id="targetOutput" class="target-output"></pre></div>
+    <button id="targetRevealBtn" class="target-reveal" type="button">Hold to reveal target Python</button>
+    <pre id="targetCode" class="target-code"></pre>
+  </div>
+</div>
+
+<div class="layout">
+<section class="panel">
+<h2>Your Python</h2>
+<textarea id="editor" spellcheck="false" placeholder="Type your Python here..."></textarea>
+<div class="inputbar"><label for="programInput">Program input — enter values separated by commas</label><input id="programInput" placeholder="e.g. 12, Alice, 5"></div>
+<div class="toolbar"><button class="run">Run Python</button><button class="reset" id="resetBtn">Reset</button><button class="check">Check</button><span id="pyStatus" class="status">Loading Python...</span></div>
+<div id="feedback" class="feedback muted">Loading the Python engine...</div>
+</section>
+
+<section class="panel">
+<h2>Live result</h2>
+<pre id="output" class="output"></pre>
+<div class="reveal-wrap"><button id="revealBtn" class="reveal" type="button">Hold to reveal Python</button><pre id="revealedCode" class="revealed-code"></pre></div>
+</section>
+</div>
+
+<script>
+const tasks=[
+{q:"Print the message shown.",out:"Hello Sunway International School",code:'print("Hello Sunway International School")',check:o=>o.trim()==="Hello Sunway International School"},
+{q:"Create a variable called name containing “Alex” and print the value.",out:"Alex",code:'name = "Alex"\nprint(name)',check:o=>o.trim()==="Alex"},
+{q:"Create variables for 12 and 5, add them, and print the result.",out:"17",code:"a = 12\nb = 5\nprint(a + b)",check:o=>o.trim()==="17"},
+{q:"Ask for a number and print its value multiplied by 10. Test it using the input shown.",out:"70",input:"7",code:'number = int(input())\nprint(number * 10)',check:o=>o.trim()==="70"},
+{q:"Ask for a name and print the greeting shown. Test it using the input shown.",out:"Hello, Maya!",input:"Maya",code:'name = input()\nprint("Hello, " + name + "!")',check:o=>o.trim()==="Hello, Maya!"},
+{q:"Ask for a mark. If the mark is 50 or more, print “Pass”; otherwise print “Fail”. Test using the input shown.",out:"Pass",input:"72",code:'mark = int(input())\nif mark >= 50:\n    print("Pass")\nelse:\n    print("Fail")',check:o=>o.trim()==="Pass"},
+{q:"Ask for a number. Print “Positive”, “Negative” or “Zero” as appropriate. Test using the input shown.",out:"Negative",input:"-4",code:'number = int(input())\nif number > 0:\n    print("Positive")\nelif number < 0:\n    print("Negative")\nelse:\n    print("Zero")',check:o=>o.trim()==="Negative"},
+{q:"Use a for loop to print the numbers 1 to 5, one per line.",out:"1\n2\n3\n4\n5",code:"for number in range(1, 6):\n    print(number)",check:o=>o.trim()==="1\\n2\\n3\\n4\\n5"},
+{q:"Use a loop to calculate and print the total of the numbers 1 to 10.",out:"55",code:"total = 0\nfor number in range(1, 11):\n    total = total + number\nprint(total)",check:o=>o.trim()==="55"},
+{q:"Ask for five numbers and count how many are greater than 10. Test using the inputs shown.",out:"3",input:"4, 12, 17, 8, 21",code:'count = 0\nfor i in range(5):\n    number = int(input())\n    if number > 10:\n        count = count + 1\nprint(count)',check:o=>o.trim()==="3"},
+{q:"Print the first and last characters of the word shown.",out:"Cn",code:'word = "Computer"\nprint(word[0] + word[-1])',check:o=>o.trim()==="Cn"},
+{q:"Print the length of the word “Cambridge”.",out:"9",code:'word = "Cambridge"\nprint(len(word))',check:o=>o.trim()==="9"},
+{q:"Convert the text shown to uppercase and print it.",out:"COMPUTER SCIENCE",code:'text = "Computer Science"\nprint(text.upper())',check:o=>o.trim()==="COMPUTER SCIENCE"},
+{q:"Create a list containing 10, 20, 30, 40. Print the third item.",out:"30",code:"numbers = [10, 20, 30, 40]\nprint(numbers[2])",check:o=>o.trim()==="30"},
+{q:"Create a list of four marks and print the highest mark.",out:"87",code:"marks = [54, 72, 87, 61]\nprint(max(marks))",check:o=>o.trim()==="87"},
+{q:"Use a loop to calculate and print the total of the values in the list.",out:"150",code:"numbers = [20, 35, 40, 55]\ntotal = 0\nfor number in numbers:\n    total = total + number\nprint(total)",check:o=>o.trim()==="150"},
+{q:"Create a function called double that takes a number and returns twice its value. Call it with 9 and print the result.",out:"18",code:"def double(number):\n    return number * 2\n\nprint(double(9))",check:o=>o.trim()==="18"},
+{q:"Create a function called is_even that returns True when a number is even and False otherwise. Print the result for 14.",out:"True",code:"def is_even(number):\n    return number % 2 == 0\n\nprint(is_even(14))",check:o=>o.trim()==="True"},
+{q:"Create a 2D list representing the grid shown. Use nested loops to print every value on its own line.",out:"1\n2\n3\n4\n5\n6",code:"grid = [[1, 2, 3], [4, 5, 6]]\nfor row in grid:\n    for value in row:\n        print(value)",check:o=>o.trim()==="1\\n2\\n3\\n4\\n5\\n6"},
+{q:"Final challenge: write a function called grade that accepts a mark and returns A for 80+, B for 70–79, C for 60–69 and F below 60. Use a loop to process the marks in the list and print each grade.",out:"A\nB\nC\nF",code:'def grade(mark):\n    if mark >= 80:\n        return "A"\n    elif mark >= 70:\n        return "B"\n    elif mark >= 60:\n        return "C"\n    else:\n        return "F"\n\nmarks = [85, 74, 63, 42]\nfor mark in marks:\n    print(grade(mark))',check:o=>o.trim()==="A\\nB\\nC\\nF"}
+];
+
+// Hidden anti-print tests. These are deliberately NOT shown to students.
+// Input tasks are tested with different hidden values; fixed-output tasks also
+// require evidence of the programming construct named in the question.
+const hiddenTests = [
+  null,
+  [{input:[], expected:"Alex"}],
+  [{input:[], expected:"17"}],
+  [{input:["3"], expected:"30"},{input:["11"], expected:"110"},{input:["-2"], expected:"-20"}],
+  [{input:["Leo"], expected:"Hello, Leo!"},{input:["Sunway"], expected:"Hello, Sunway!"}],
+  [{input:["49"], expected:"Fail"},{input:["50"], expected:"Pass"},{input:["100"], expected:"Pass"}],
+  [{input:["9"], expected:"Positive"},{input:["0"], expected:"Zero"},{input:["-12"], expected:"Negative"}],
+  [{input:[], expected:"1\n2\n3\n4\n5"}],
+  [{input:[], expected:"55"}],
+  [{input:["11","1","12","13","2"], expected:"3"},{input:["10","10","10","10","10"], expected:"0"}],
+  [{input:[], expected:"Cn"}],
+  [{input:[], expected:"9"}],
+  [{input:[], expected:"COMPUTER SCIENCE"}],
+  [{input:[], expected:"30"}],
+  [{input:[], expected:"87"}],
+  [{input:[], expected:"150"}],
+  [{input:[], expected:"18"}],
+  [{input:[], expected:"True"}],
+  [{input:[], expected:"1\n2\n3\n4\n5\n6"}],
+  [{input:[], expected:"A\nB\nC\nF"}]
+];
+
+function normaliseCode(c){
+ return c.replace(/#[^\n]*/g,"").replace(/\s+/g," ").trim().toLowerCase();
+}
+function hasAny(code, parts){return parts.some(x=>code.includes(x));}
+function sourceLooksGenuine(index, raw){
+ const c=normaliseCode(raw);
+ if(!c) return false;
+ // Task 1 is intentionally a simple print task: a print-only solution is the correct solution.
+ if(index===0) return /print\s*\(\s*["\']hello sunway international school["\']\s*\)/.test(c);
+ // Reject the obvious cheat: printing the visible answer without implementing the task.
+ const literalOnly = c.replace(/print\s*\([^)]*\)/g,"").trim();
+ if(literalOnly==="") return false;
+ const requirements=[
+   [],
+   ["name", "print"],
+   ["print", "+"],
+   ["input", "*"],
+   ["input", "hello", "+"],
+   ["input", "if", "else"],
+   ["input", "if", "elif"],
+   ["for", "range"],
+   ["for", "total"],
+   ["input", "for", "count", "if"],
+   ["computer", "[0]", "[-1]"],
+   ["len", "word"],
+   ["upper", "text"],
+   ["[10, 20, 30, 40]", "[2]"],
+   ["marks", "max("],
+   ["for", "total", "numbers"],
+   ["def double", "return", "double("],
+   ["def is_even", "return", "% 2", "is_even("],
+   ["grid", "for row", "for value"],
+   ["def grade", "return \"a\"", "return \"b\"", "return \"c\"", "return \"f\"", "for mark"]
+ ];
+ return requirements[index].every(x=>c.includes(x));
+}
+
+function hiddenExpected(index, caseIndex){return hiddenTests[index]?.[caseIndex]?.expected ?? tasks[index].out;}
+
+
+let n=0,pyodide=null,running=false;
+let score=0,taskScored=false,revealUsedForTask=false;
+function updateScore(){document.getElementById("score").textContent=score;}
+function resetTaskScore(){taskScored=false;revealUsedForTask=false;}
+function awardPoints(){if(taskScored)return;score+=revealUsedForTask?1:3;taskScored=true;updateScore();}
+const editor=document.getElementById("editor"),output=document.getElementById("output"),targetOutput=document.getElementById("targetOutput"),targetCode=document.getElementById("targetCode"),targetRevealBtn=document.getElementById("targetRevealBtn"),revealBtn=document.getElementById("revealBtn"),revealedCode=document.getElementById("revealedCode"),feedback=document.getElementById("feedback"),input=document.getElementById("programInput"),status=document.getElementById("pyStatus");
+
+function loadTask(){
+ resetTaskScore();
+ document.getElementById("num").textContent=`Task ${n+1} of ${tasks.length}`;
+ document.getElementById("task").textContent=tasks[n].q;
+ targetOutput.textContent=tasks[n].out;
+ targetCode.style.display="none";targetCode.textContent="";targetRevealBtn.textContent="Hold to reveal target Python";
+ editor.value="";input.value=tasks[n].input||"";output.textContent="";
+ revealedCode.style.display="none";revealedCode.textContent="";revealBtn.textContent="Hold to reveal Python";
+ feedback.className="feedback muted";feedback.textContent="Type your Python and click Run Python.";
+}
+async function executePython(testInput=null){
+ if(!pyodide){feedback.textContent="Python is still loading...";return null}
+ if(running)return null;
+ running=true;
+ if(testInput===null) output.textContent="Running...";
+ try{
+  const vals=(testInput===null ? input.value : testInput.join(",")).split(",").map(x=>x.trim());
+  const code=editor.value;
+  const prelude=`import sys, json, io
+__trace_inputs=json.loads(${JSON.stringify(JSON.stringify(vals))})
+__trace_index=0
+def input(prompt=""):
+    global __trace_index
+    if __trace_index>=len(__trace_inputs):
+        raise EOFError("No more program input was supplied.")
+    value=__trace_inputs[__trace_index]
+    __trace_index+=1
+    return value
+`;
+  await pyodide.runPythonAsync(prelude+"\nsys.stdout=io.StringIO()\n"+code);
+  const out=pyodide.runPython("sys.stdout.getvalue()");
+  if(testInput===null) output.textContent=out;
+  return out;
+ }catch(err){
+  if(testInput===null) output.textContent=String(err);
+  return null;
+ }finally{running=false}
+}
+
+async function checkCode(){
+ if(!editor.value.trim()){feedback.className="feedback bad";feedback.textContent="✗ Enter some Python first.";return}
+ if(!sourceLooksGenuine(n, editor.value)){
+  feedback.className="feedback bad";
+  feedback.textContent="✗ Your code does not yet implement the required Python technique. Printing the target output is not enough.";
+  return;
+ }
+ // First run the student's visible test.
+ const visibleOut=await executePython();
+ if(visibleOut===null){feedback.className="feedback bad";feedback.textContent="✗ Your program produced an error.";return}
+ // Then run hidden cases that are never displayed in the page.
+ const cases=hiddenTests[n] || [{input:[],expected:tasks[n].out}];
+ for(let i=0;i<cases.length;i++){
+  const out=await executePython(cases[i].input);
+  if(out===null || out.trim()!==hiddenExpected(n,i)){
+   feedback.className="feedback bad";
+   feedback.textContent="✗ Your program failed a hidden test. Try making the solution work generally rather than matching the displayed answer.";
+   return;
+  }
+ }
+ awardPoints();
+ feedback.className="feedback good";
+ feedback.textContent=`✓ Correct. +${revealUsedForTask?1:3} points`;
+ if(n<tasks.length-1)setTimeout(()=>{n++;loadTask()},650);
+ else feedback.textContent=`✓ All 20 tasks completed! Score: ${score}/60`;
+}
+
+document.querySelector(".run").onclick=()=>executePython();
+document.querySelector(".check").onclick=checkCode;
+document.getElementById("resetBtn").onclick=()=>{editor.value="";output.textContent="";feedback.className="feedback muted";feedback.textContent="Type your Python and click Run Python."};
+
+function installHold(btn,pre,getText,label){
+ btn.addEventListener("pointerdown",e=>{e.preventDefault();btn.setPointerCapture?.(e.pointerId);pre.textContent=getText();pre.style.display="block";btn.textContent="Release to hide Python"});
+ btn.addEventListener("pointerup",e=>{e.preventDefault();pre.style.display="none";pre.textContent="";btn.textContent=label;try{btn.releasePointerCapture(e.pointerId)}catch(_){}});
+ btn.addEventListener("pointercancel",()=>{pre.style.display="none";pre.textContent="";btn.textContent=label});
+ btn.addEventListener("lostpointercapture",()=>{pre.style.display="none";pre.textContent="";btn.textContent=label});
+ btn.addEventListener("contextmenu",e=>e.preventDefault());
+}
+installHold(targetRevealBtn,targetCode,()=>tasks[n].code,"Hold to reveal target Python");
+revealBtn.addEventListener("pointerdown",()=>{revealUsedForTask=true;});
+installHold(revealBtn,revealedCode,()=>editor.value,"Hold to reveal Python");
+
+async function boot(){
+ status.textContent="Loading Python...";
+ feedback.className="feedback muted";
+ feedback.textContent="Loading the Python engine. This can take a few seconds the first time.";
+ const urls=[
+  "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js",
+  "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"
+ ];
+ let lastError=null;
+ for(const url of urls){
+  try{
+   const s=document.createElement("script");
+   s.src=url;
+   s.async=true;
+   await new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(new Error("Python engine download timed out")),30000);
+    s.onload=()=>{clearTimeout(timer);resolve()};
+    s.onerror=()=>{clearTimeout(timer);reject(new Error("Python engine script could not be downloaded"))};
+    document.head.appendChild(s);
+   });
+   if(typeof loadPyodide!=="function") throw new Error("Python engine loaded but could not be started");
+   pyodide=await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"});
+   status.textContent="Python ready";
+   feedback.className="feedback muted";
+   feedback.textContent="Python is ready. Type your solution.";
+   return;
+  }catch(e){lastError=e;}
+ }
+ status.textContent="Python failed to load";
+ feedback.className="feedback bad";
+ feedback.textContent="Python could not load in this browser. If you are opening this inside Google Sites, open the game directly in a new browser tab and try again.";
+ console.error(lastError);
+}
+loadTask();boot();
+</script>
+</body></html>
