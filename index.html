@@ -71,7 +71,7 @@ const tasks=[
 {q:"Use a for loop to print the numbers 1 to 5, one per line.",out:"1\n2\n3\n4\n5",code:"for number in range(1, 6):\n    print(number)",check:o=>o.trim()==="1\\n2\\n3\\n4\\n5"},
 {q:"Use a loop to calculate and print the total of the numbers 1 to 10.",out:"55",code:"total = 0\nfor number in range(1, 11):\n    total = total + number\nprint(total)",check:o=>o.trim()==="55"},
 {q:"Ask for five numbers and count how many are greater than 10. Test using the inputs shown.",out:"3",input:"4, 12, 17, 8, 21",code:'count = 0\nfor i in range(5):\n    number = int(input())\n    if number > 10:\n        count = count + 1\nprint(count)',check:o=>o.trim()==="3"},
-{q:"Print the first and last characters of the word shown.",out:"Cn",code:'word = "Computer"\nprint(word[0] + word[-1])',check:o=>o.trim()==="Cn"},
+{q:"Print the first and last characters of the word shown.",out:"Cr",code:'word = "Computer"\nprint(word[0] + word[-1])',check:o=>o.trim()==="Cr"},
 {q:"Print the length of the word “Cambridge”.",out:"9",code:'word = "Cambridge"\nprint(len(word))',check:o=>o.trim()==="9"},
 {q:"Convert the text shown to uppercase and print it.",out:"COMPUTER SCIENCE",code:'text = "Computer Science"\nprint(text.upper())',check:o=>o.trim()==="COMPUTER SCIENCE"},
 {q:"Create a list containing 10, 20, 30, 40. Print the third item.",out:"30",code:"numbers = [10, 20, 30, 40]\nprint(numbers[2])",check:o=>o.trim()==="30"},
